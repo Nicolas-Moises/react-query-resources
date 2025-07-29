@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-200 text-slate-800;
+  }
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  @apply bg-scrollTrack
+}
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-scrollThumb
+}
+
+#body {
+  pointer-events: auto !important;
+}
+
+.home-container {
+  @apply w-full max-w-[1000px] mx-auto px-2 sm:px-4
+}
+
+#gradient-canvas {
+  --gradient-color-1: #6366f1;
+  --gradient-color-2: #4f46e5;
+  --gradient-color-3: #818cf8;
+  --gradient-color-4: #6366f1;
+}
+
+/* React Select */
+
+.react-select__control {
+  @apply !bg-slate-100 !border-slate-200 
+}
+
+.hasError .react-select__control {
+  @apply !border-red-400
+}
+
+.react-select__control--is-focused {
+  @apply !border-indigo-500
+}
+
+.react-select__menu {
+  @apply !bg-slate-100 !border-slate-200
+}
+
+.react-select__option {
+  @apply !text-sm transition-colors
+}
+
+.react-select__option--is-focused, .react-select__option--is-selected {
+  @apply !bg-indigo-500 !text-white
+}
+
+.react-select__placeholder {
+  @apply !text-slate-400 !text-sm
+}
+
+.react-select__single-value {
+  @apply !text-slate-800 !text-sm
+}
+
+.description.prose * {
+  @apply !text-gray-500
+}
+
+.description.prose a {
+  @apply !text-primary
+}
+
+.react-select__multi-value {
+  @apply !bg-indigo-200 !font-light
+}
+
+.react-select__multi-value__remove {
+  @apply hover:!bg-indigo-500 hover:!text-white
+}
+
+/* Phone input */
+
+.form-control  {
+  @apply !bg-slate-100 !rounded-md !text-sm !text-slate-800 !font-sans focus:ring-0 !border-slate-200 placeholder:text-slate-400 !h-[38px] !w-full
+}
+
+.form-control.error {
+  @apply ring-1 !ring-red-400
+}
+
+.form-control.disabled {
+  @apply !bg-slate-100/70
+}
+
+.flag-dropdown  {
+  @apply !bg-slate-100 !font-sans !border-slate-200
+}
+
+.country-list  {
+  @apply !bg-slate-100 !border-slate-200
+}

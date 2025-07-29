@@ -1,0 +1,361 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  firstName String
+  lastName  String?
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  emailVerifiedAt DateTime?
+
+  isSuperAdmin Boolean @default(false)
+
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId String?
+  tokens    Tokens[]
+
+  @@map("users")
+}
+
+model Company {
+  id        String    @id @default(uuid())
+  slug      String    @unique
+  name      String
+  phone     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  ownerId   String
+
+  themeColor String @default("#6366f1") @db.VarChar(7)
+
+  users                User[]
+  products             Product[]
+  categories           Category[]
+  productVariants      ProductVariant[]
+  ProductVariantOption ProductVariantOption[]
+
+  logo   File?   @relation(fields: [logoId], references: [id])
+  logoId String?
+
+  customerId String?
+
+  isExample Boolean @default(false)
+
+  links        CompanyLinks[]
+  banners      CompanyBanners[]
+  order        Order[]
+  subscription Subscription[]
+  linksPage    CompanyLinksPage[]
+  stock        Stock[]
+
+  siteDetail   SiteDetail? @relation(fields: [siteDetailId], references: [id])
+  siteDetailId String?
+
+  @@map("companies")
+}
+
+model OrderProducts {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  name       String
+  price      Float
+  promoPrice Float?
+  quantity   Int
+
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId String?
+
+  selectedVariants ProductVariantOption[]
+
+  @@map("order_products")
+}
+
+enum OrderStatus {
+  PENDING
+  FINISHED
+  EXPIRED
+}
+
+model Order {
+  id         String @id
+  buyerName  String
+  buyerPhone String
+
+  status OrderStatus @default(PENDING)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  expiresAt DateTime
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  products OrderProducts[]
+
+  @@map("orders")
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  slug        String?   @default("product-slug")
+  name        String
+  price       Float
+  promoPrice  Float?
+  description String?   @db.VarChar(800)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  isVisible     Boolean  @default(true)
+  isHighlighted Boolean? @default(false)
+
+  isEditable Boolean @default(true)
+
+  categories Category[]
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  variants ProductVariant[]
+
+  pictures      File[]
+  orderProducts OrderProducts[]
+
+  stock Stock[]
+
+  @@map("products")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  slug      String?
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  isEditable Boolean @default(true)
+
+  products  Product[]
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  @@map("categories")
+}
+
+model ProductVariant {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+
+  company   Company                @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+  options   ProductVariantOption[]
+
+  @@map("product_variants")
+}
+
+model ProductVariantOption {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  productVariantId String
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  orderProducts OrderProducts[]
+  stock1        Stock[]         @relation("productVariantOption1")
+  stock2        Stock[]         @relation("productVariantOption2")
+
+  @@map("product_variant_options")
+}
+
+model File {
+  id        String   @id @default(uuid())
+  fileName  String
+  fileUrl   String
+  key       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product   Product? @relation(fields: [productId], references: [id])
+  productId String?
+
+  company          Company[]
+  companyBanners   CompanyBanners[]
+  companyLinksPage CompanyLinksPage[]
+  siteDetail       SiteDetail[]
+}
+
+model CompanyLinks {
+  id        String    @id @default(uuid())
+  url       String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  @@map("company_links")
+}
+
+model CompanyBanners {
+  id        String    @id @default(uuid())
+  url       String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  picture   File   @relation(fields: [pictureId], references: [id], onDelete: Cascade)
+  pictureId String
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  @@map("company_banners")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  CANCELING
+  EXPIRED
+}
+
+model Subscription {
+  id        String             @id @default(uuid())
+  status    SubscriptionStatus @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  expiresAt DateTime?
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  @@map("subscriptions")
+}
+
+model CompanyLinksPage {
+  id         String  @id @default(uuid())
+  title      String
+  headLine   String?
+  textColor  String  @db.VarChar(7)
+  textColor2 String  @db.VarChar(7)
+  boxColor   String  @db.VarChar(7)
+  boxMode    String
+  bgColor    String  @db.VarChar(7)
+  bgColor2   String  @db.VarChar(7)
+  bgMode     String
+  logoMode   String
+
+  logo   File?   @relation(fields: [logoId], references: [id], onDelete: SetNull)
+  logoId String?
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  links CompanyLinksPageLink[]
+
+  @@map("company_links_pages")
+}
+
+model CompanyLinksPageLink {
+  id String @id @default(uuid())
+
+  title String
+  url   String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  companyLinksPage   CompanyLinksPage @relation(fields: [companyLinksPageId], references: [id], onDelete: Cascade)
+  companyLinksPageId String
+
+  @@map("company_links_pages_links")
+}
+
+model Stock {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+
+  productVariantOption   ProductVariantOption? @relation("productVariantOption1", fields: [productVariantOptionId], references: [id])
+  productVariantOptionId String?
+
+  productVariantOption2   ProductVariantOption? @relation("productVariantOption2", fields: [productVariantOptionId2], references: [id])
+  productVariantOptionId2 String?
+
+  quantity Int
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  @@map("stocks")
+}
+
+enum TokenType {
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+  REFRESH_TOKEN
+}
+
+model Tokens {
+  id String @id @default(uuid())
+
+  token     String
+  type      TokenType
+  expiresAt DateTime
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  @@index([token], name: "token")
+  @@map("tokens")
+}
+
+model SiteDetail {
+  id        String    @id @default(uuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  company   Company[]
+
+  favicon       File?   @relation(fields: [faviconFileId], references: [id])
+  faviconFileId String?
+
+  withFloatingButton Boolean @default(true)
+  imageFitMode       String  @default("contain")
+
+  @@map("site_details")
+}
